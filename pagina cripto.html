@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Cripto con IA Avanzado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo para un scrollbar más acorde al tema oscuro */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a202c; /* bg-gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a5568; /* bg-gray-600 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2d3748; /* bg-gray-700 */
+        }
+        /* Estilo personalizado para checkboxes */
+        .custom-checkbox {
+            transition: all 0.2s ease-in-out;
+        }
+        .custom-checkbox:checked {
+            background-color: #ef4444; /* red-500 */
+            border-color: #f87171; /* red-400 */
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+        }
+        .custom-checkbox:checked::before {
+            content: '✓';
+            color: #ffffff;
+            display: block;
+            text-align: center;
+            line-height: 1.2;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        /* Animación para el texto del encabezado */
+        .animated-gradient-text {
+            background: linear-gradient(-45deg, #e0e7ff, #ffffff, #a5b4fc, #ffffff, #e0e7ff);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-move 8s ease infinite;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Estilos para la sección desplegable de la tarjeta */
+        .card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out, padding-top 0.5s ease-in-out;
+            border-top: 0px solid #4a5568;
+        }
+
+        .expanded .card-details {
+            max-height: 140px; /* Aumentado para más contenido */
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top-width: 1px;
+        }
+
+        /* Estilos para la sección desplegable de la recomendación */
+        .recommendation-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease-in-out;
+            background-color: #374151; /* bg-gray-700 */
+            border-top: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+
+        .expanded .recommendation-details {
+            max-height: 600px; /* Aumentado para más texto y temporalidades */
+            padding: 1.5rem;
+        }
+
+        .expanded #recommendation-box {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        /* Animaciones de borde para las tarjetas de resultados */
+        @keyframes green-pulse {
+            from { border-color: #22c55e; box-shadow: 0 0 2px #22c55e; }
+            to   { border-color: #86efac; box-shadow: 0 0 8px -1px #86efac; }
+        }
+
+        @keyframes red-pulse {
+            from { border-color: #ef4444; box-shadow: 0 0 2px #ef4444; }
+            to   { border-color: #fca5a5; box-shadow: 0 0 8px -1px #fca5a5; }
+        }
+         @keyframes neutral-pulse {
+            from { border-color: #6b7280; box-shadow: 0 0 2px #6b7280; }
+            to   { border-color: #d1d5db; box-shadow: 0 0 8px -1px #d1d5db; }
+        }
+
+
+        .animate-border-green {
+            animation: green-pulse 1.5s infinite alternate;
+        }
+
+        .animate-border-red {
+            animation: red-pulse 1.5s infinite alternate;
+        }
+        .animate-border-neutral {
+             animation: neutral-pulse 1.5s infinite alternate;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+    <!-- Pantalla de Inicio de Sesión -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-20">
+        <div class="w-full max-w-sm p-8 space-y-6 bg-black/30 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700">
+            <h1 class="text-2xl font-bold text-center text-white animated-gradient-text">Iniciar Sesión</h1>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="text-sm font-medium text-gray-300 block mb-2">Usuario</label>
+                    <input type="text" id="username" name="username" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-gray-300 block mb-2">Contraseña</label>
+                    <input type="password" id="password" name="password" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <p id="login-error" class="text-red-400 text-sm text-center hidden"></p>
+                <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-bold transition duration-300 transform hover:scale-105">
+                    Ingresar
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Contenido principal de la aplicación -->
+    <div id="app-content" class="hidden">
+        <header class="bg-gradient-to-r from-blue-700 to-blue-500 p-3 shadow-lg sticky top-0 z-10">
+            <h1 class="text-xl md:text-2xl font-bold text-center tracking-wider animated-gradient-text">
+                Análisis de Criptomonedas con IA Avanzado
+            </h1>
+        </header>
+
+        <main class="container mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Columna de Configuración y Envío -->
+            <div class="bg-black/30 backdrop-blur-sm p-6 rounded-xl shadow-2xl space-y-6 border border-gray-700">
+                <h2 class="text-xl font-semibold border-b-2 border-blue-500 pb-2">Configuración de Análisis</h2>
+
+                <!-- Selección de Criptomoneda -->
+                <div>
+                    <label for="crypto-select" class="block mb-2 text-sm font-medium text-gray-300">1. Selecciona la Criptomoneda</label>
+                    <select id="crypto-select" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <!-- Opciones se cargarán con JavaScript -->
+                    </select>
+                </div>
+
+                <!-- Selección de Indicadores -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">2. Elige los Indicadores (uno o más)</label>
+                    <div id="indicators-container" class="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-black/20 p-4 rounded-lg border border-gray-700/50">
+                        <!-- Indicadores se cargarán con JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Selección de Temporalidades -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">3. Elige las Temporalidades (una o más)</label>
+                    <div id="timeframes-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-black/20 p-4 rounded-lg border border-gray-700/50">
+                        <!-- Temporalidades se cargarán con JavaScript -->
+                    </div>
+                </div>
+
+                <button id="send-webhook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-800">
+                    <span id="button-text">Analizar y Enviar Datos</span>
+                    <span id="loading-spinner" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 inline-block text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Enviando...
+                    </span>
+                </button>
+                 <button id="gemini-analysis" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-800 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <span id="gemini-button-text">✨ Generar Análisis Avanzado con IA</span>
+                    <span id="gemini-loading-spinner" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 inline-block text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generando...
+                    </span>
+                </button>
+                <div id="status-message" class="text-center mt-4 text-sm"></div>
+            </div>
+
+            <!-- Columna de Resultados -->
+            <div class="space-y-8">
+                <!-- Sección de Datos Recibidos -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                    <h2 class="text-xl font-semibold border-b-2 border-gray-600 pb-2 mb-4">Datos Recibidos del Webhook</h2>
+                    <div id="data-received-container" class="min-h-[150px] flex items-center justify-center">
+                        <div id="data-received" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <p id="data-placeholder" class="text-gray-400 md:col-span-2 text-center">Esperando datos...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Recomendación -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                    <h2 class="text-xl font-semibold border-b-2 border-gray-600 pb-2 mb-4">Recomendación de IA</h2>
+                    <div id="recommendation-wrapper">
+                        <div id="recommendation-box" class="flex items-center justify-center min-h-[100px] text-3xl font-bold rounded-xl bg-gray-700 text-gray-400 transition-all duration-500">
+                            ESPERANDO ANÁLISIS
+                        </div>
+                        <div class="recommendation-details">
+                            <p id="recommendation-text" class="text-gray-300"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginScreen = document.getElementById('login-screen');
+            const appContent = document.getElementById('app-content');
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('login-error');
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (username === 'reneli' && password === '123456cra') {
+                    loginScreen.style.display = 'none';
+                    appContent.classList.remove('hidden');
+                } else {
+                    loginError.textContent = 'Usuario o contraseña incorrectos.';
+                    loginError.classList.remove('hidden');
+                }
+            });
+
+            
+            const webhookUrl = 'https://n8n-n8n.s4u9c4.easypanel.host/webhook/4cb57186-105f-4db0-b807-980187c6b08f';
+            let lastPayload = null; // Guardar el último payload para el análisis de Gemini
+
+            // --- DATOS PARA LAS LISTAS ---
+            const top100Cryptos = [
+                'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT', 'SHIBUSDT', 'AVAXUSDT', 'DOTUSDT',
+                'TRXUSDT', 'LINKUSDT', 'MATICUSDT', 'BCHUSDT', 'ICPUSDT', 'LTCUSDT', 'NEARUSDT', 'UNIUSDT', 'LEOUSDT', 'ETCUSDT',
+                'OKBUSDT', 'XLMUSDT', 'INJUSDT', 'OPUSDT', 'IMXUSDT', 'HBARUSDT', 'CROUSDT', 'VETUSDT', 'TUSDUSDT', 'APTUSDT',
+                'TONUSDT', 'FILUSDT', 'XMRUSDT', 'KASUSDT', 'ATOMUSDT', 'GRTUSDT', 'RNDRUSDT', 'STXUSDT', 'LDOUSDT', 'MKRUSDT',
+                'BSVUSDT', 'ALGOUSDT', 'AAVEUSDT', 'SUIUSDT', 'HNTUSDT', 'QNTUSDT', 'EGLDUSDT', 'ARBUSDT', 'FTMUSDT', 'SEIUSDT',
+                'SANDUSDT', 'THETAUSDT', 'AXSUSDT', 'MANAUSDT', 'SNXUSDT', 'XTZUSDT', 'FLOWUSDT', 'EOSUSDT', 'ASTRUSDT', 'CHZUSDT',
+                'GALAUSDT', 'KLAYUSDT', 'NEOUSDT', 'CFXUSDT', 'IOTAUSDT', 'RPLUSD', 'MINAUSDT', 'FXSUSDT', 'GMXUSDT', 'ZECUSDT',
+                'BGBUSDT', 'USDPUSDT', 'CAKEUSDT', 'LUNCUSDT', 'HTUSDT', 'TWTUSDT', 'CRVUSDT', 'WOOUSDT', 'PEPEUSDT', 'FLOKIUSDT',
+                'PAXGUSDT', 'DYDXUSDT', 'NEXOUSDT', '1INCHUSDT', 'ENJUSDT', 'ZILUSDT', 'ROSEUSDT', 'BATUSDT', 'ANKRUSDT', 'HOTUSDT',
+                'XDCUSDT', 'COMPUSDT', 'WAVESUSDT', 'LRCUSDT', 'DASHUSDT', 'KAVAUSDT', 'MASKUSDT', 'CVXUSDT', 'CELOUSDT', 'ARUSDT'
+            ];
+
+            const indicators = [
+                { id: 'rsi', name: 'RSI' },
+                { id: 'macd', name: 'MACD' },
+                { id: 'bollinger', name: 'Bollinger Bands' },
+                { id: 'ma', name: 'Moving Average' },
+                { id: 'stoch', name: 'Stochastic' },
+                { id: 'ichimoku', name: 'Ichimoku Cloud' },
+                { id: 'fibonacci', name: 'Fibonacci Ret.' },
+                { id: 'volume', name: 'Volume Profile' }
+            ];
+
+            const timeframes = [
+                { id: '1m', name: '1 Min' },
+                { id: '5m', name: '5 Min' },
+                { id: '15m', name: '15 Min' },
+                { id: '1h', name: '1 Hora' },
+                { id: '4h', name: '4 Horas' },
+                { id: '1d', name: '1 Día' },
+                { id: '1mo', name: '1 Mes' }
+            ];
+
+            const timeframeDetails = {
+                '1m': { title: '1 Minuto', description: 'Scalping y alta frecuencia', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`, iconBg: 'bg-teal-900/50', iconColor: 'text-teal-400' },
+                '5m': { title: '5 Minutos', description: 'Micro-tendencias', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`, iconBg: 'bg-cyan-900/50', iconColor: 'text-cyan-400' },
+                '15m': { title: '15 Minutos', description: 'Tendencias a corto plazo', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`, iconBg: 'bg-blue-900/50', iconColor: 'text-blue-400' },
+                '1h': { title: '1 Hora', description: 'Análisis intradiario', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10" /><path d="M5 4h14" /><path d="M17 4v5l-4.1 4.1c-.6.6-1.5.6-2.1 0L7 9V4" /><path d="M17 14.1l-4.1-4.1c-.6-.6-1.5-.6-2.1 0L7 14.1V20h10v-5.9" /></svg>`, iconBg: 'bg-green-900/50', iconColor: 'text-green-400' },
+                '4h': { title: '4 Horas', description: 'Swing trading', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M5 5l14 14"/></svg>`, iconBg: 'bg-yellow-900/50', iconColor: 'text-yellow-400' },
+                '1d': { title: '1 Día', description: 'Tendencia diaria', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`, iconBg: 'bg-orange-900/50', iconColor: 'text-orange-400' },
+                '1mo': { title: '1 Mes', description: 'Tendencias a largo plazo', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 4v16M5 12h14"/></svg>`, iconBg: 'bg-purple-900/50', iconColor: 'text-purple-400' }
+            };
+
+            // --- ELEMENTOS DEL DOM ---
+            const cryptoSelect = document.getElementById('crypto-select');
+            const indicatorsContainer = document.getElementById('indicators-container');
+            const timeframesContainer = document.getElementById('timeframes-container');
+            const sendButton = document.getElementById('send-webhook');
+            const buttonText = document.getElementById('button-text');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const geminiButton = document.getElementById('gemini-analysis');
+            const geminiButtonText = document.getElementById('gemini-button-text');
+            const geminiLoadingSpinner = document.getElementById('gemini-loading-spinner');
+            const statusMessage = document.getElementById('status-message');
+            const dataReceivedContainer = document.getElementById('data-received-container');
+            const dataReceivedDiv = document.getElementById('data-received');
+            const recommendationBox = document.getElementById('recommendation-box');
+            const recommendationWrapper = document.getElementById('recommendation-wrapper');
+            const recommendationText = document.getElementById('recommendation-text');
+            
+            // --- FUNCIONES DE INICIALIZACIÓN ---
+            
+            top100Cryptos.forEach(crypto => {
+                const option = document.createElement('option');
+                option.value = crypto;
+                option.textContent = crypto;
+                cryptoSelect.appendChild(option);
+            });
+
+            const createCheckbox = (item) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = item.id;
+                checkbox.value = item.id;
+                checkbox.className = 'w-4 h-4 text-red-600 bg-gray-700 border-gray-400 rounded focus:ring-red-500 ring-offset-gray-800 focus:ring-2 appearance-none custom-checkbox';
+                const label = document.createElement('label');
+                label.htmlFor = item.id;
+                label.textContent = item.name;
+                label.className = 'ml-2 text-sm font-medium text-gray-200';
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                return wrapper;
+            };
+
+            indicators.forEach(indicator => {
+                indicatorsContainer.appendChild(createCheckbox(indicator));
+            });
+            
+            timeframes.forEach(timeframe => {
+                timeframesContainer.appendChild(createCheckbox(timeframe));
+            });
+
+            // --- LÓGICA DE EVENTOS ---
+            recommendationBox.addEventListener('click', () => {
+                const currentStatus = recommendationBox.textContent.trim();
+                if (currentStatus !== 'ESPERANDO ANÁLISIS' && currentStatus !== 'ERROR' && !recommendationBox.querySelector('.animate-pulse')) {
+                    recommendationWrapper.classList.toggle('expanded');
+                }
+            });
+
+            sendButton.addEventListener('click', async () => {
+                const selectedCrypto = cryptoSelect.value;
+                const selectedIndicators = Array.from(indicatorsContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+                const selectedTimeframes = Array.from(timeframesContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+                
+                if (selectedIndicators.length === 0 || selectedTimeframes.length === 0) {
+                    statusMessage.textContent = 'Por favor, selecciona al menos un indicador y una temporalidad.';
+                    statusMessage.className = 'text-red-400 text-center mt-4 text-sm';
+                    return;
+                }
+
+                setLoading(true, 'webhook');
+
+                const payload = {
+                    symbol: selectedCrypto,
+                    indicators: selectedIndicators,
+                    timeframes: selectedTimeframes,
+                    timestamp: new Date().toISOString()
+                };
+                lastPayload = payload; // Guardar para Gemini
+
+                try {
+                    // Simulación de llamada a webhook, en un caso real aquí iría el fetch
+                    await new Promise(resolve => setTimeout(resolve, 500)); 
+                    
+                    statusMessage.textContent = 'Datos simulados recibidos. ¡Listo para el análisis avanzado!';
+                    statusMessage.className = 'text-green-400 text-center mt-4 text-sm';
+
+                    displayDataCards(payload);
+                    recommendationBox.textContent = 'LISTO PARA IA';
+                    recommendationBox.className = 'flex items-center justify-center min-h-[100px] text-3xl font-bold rounded-xl bg-gray-700 text-gray-400 transition-all duration-500';
+                    recommendationText.innerHTML = 'Haz clic en el botón de análisis avanzado para obtener una recomendación de IA.';
+                    geminiButton.disabled = false; // Habilitar el botón de Gemini
+
+                } catch (error) {
+                    handleError(error);
+                } finally {
+                    setLoading(false, 'webhook');
+                }
+            });
+
+            geminiButton.addEventListener('click', async () => {
+                if (!lastPayload) {
+                    statusMessage.textContent = 'Primero debes analizar los datos.';
+                    statusMessage.className = 'text-yellow-400 text-center mt-4 text-sm';
+                    return;
+                }
+                setLoading(true, 'gemini');
+                
+                recommendationBox.innerHTML = `<div class="flex items-center justify-center animate-pulse">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>GENERANDO ANÁLISIS...</span>
+                </div>`;
+                recommendationBox.className = 'flex items-center justify-center min-h-[100px] text-xl font-bold rounded-xl bg-purple-900/50 text-purple-300 transition-all duration-500';
+                recommendationWrapper.classList.remove('expanded');
+
+                try {
+                    await generateGeminiRecommendation(lastPayload);
+                } catch (error) {
+                    handleError(error, 'gemini');
+                } finally {
+                    setLoading(false, 'gemini');
+                }
+            });
+            
+            function displayDataCards(payload) {
+                dataReceivedDiv.innerHTML = ''; 
+                dataReceivedContainer.classList.remove('items-center', 'justify-center');
+                const cardActions = ['buy', 'sell', 'wait'];
+
+                payload.timeframes.forEach(tf => {
+                    const details = timeframeDetails[tf];
+                    if (details) {
+                        const card = document.createElement('div');
+                        card.className = 'bg-gray-700/50 backdrop-blur-sm border border-gray-700 p-4 rounded-xl transform hover:scale-105 transition-all duration-300 cursor-pointer';
+                        const cardAction = cardActions[Math.floor(Math.random() * cardActions.length)];
+                        
+                        if (cardAction === 'buy') card.classList.add('animate-border-green');
+                        else if (cardAction === 'sell') card.classList.add('animate-border-red');
+                        else card.classList.add('animate-border-neutral');
+                        
+                        const entryPrice = parseFloat((Math.random() * (70000 - 60000) + 60000).toFixed(2));
+                        const stopLoss = parseFloat((entryPrice * (cardAction === 'buy' ? 0.985 : 1.015)).toFixed(2));
+                        const takeProfit = parseFloat((entryPrice * (cardAction === 'buy' ? 1.03 : 0.97)).toFixed(2));
+                        
+                        card.innerHTML = `
+                            <div class="flex items-center space-x-4">
+                                <div class="p-3 rounded-lg ${details.iconBg} ${details.iconColor} flex-shrink-0">${details.icon}</div>
+                                <div>
+                                    <h3 class="font-semibold text-white">${details.title}</h3>
+                                    <p class="text-sm text-gray-400">${details.description}</p>
+                                </div>
+                            </div>
+                            <div class="card-details border-gray-600">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-cyan-400 font-semibold">Precio de Entrada</span>
+                                    <span class="font-mono text-white font-bold">$${entryPrice.toLocaleString('en-US')}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm mt-2">
+                                    <span class="text-green-400 font-semibold">Take Profit</span>
+                                    <span class="font-mono text-white">$${takeProfit.toLocaleString('en-US')}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm mt-2">
+                                    <span class="text-red-400 font-semibold">Stop Loss</span>
+                                    <span class="font-mono text-white">$${stopLoss.toLocaleString('en-US')}</span>
+                                </div>
+                            </div>
+                        `;
+                        card.addEventListener('click', () => card.classList.toggle('expanded'));
+                        dataReceivedDiv.appendChild(card);
+                    }
+                });
+            }
+
+            async function generateGeminiRecommendation(payload) {
+                const { symbol, indicators, timeframes } = payload;
+                const apiKey = ""; // Será proveída por el entorno de ejecución
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+                const systemPrompt = `Actúa como un analista experto en trading de criptomonedas. Tu análisis debe ser claro, conciso, y basado en datos actuales. Proporciona una recomendación general (COMPRAR, VENDER o MANTENER) y luego un análisis detallado para cada temporalidad solicitada, explicando el porqué de cada acción. Basa tu análisis en los indicadores proporcionados y en noticias recientes o sentimiento del mercado. Formatea tu respuesta exactamente así:
+
+RECOMENDACIÓN: [TU RECOMENDACIÓN]
+
+ANÁLISIS:
+**Análisis para [Temporalidad 1]:** [Tu análisis detallado para esta temporalidad]
+**Análisis para [Temporalidad 2]:** [Tu análisis detallado para esta temporalidad]
+...y así sucesivamente.`;
+
+                const userQuery = `Analiza la criptomoneda ${symbol} usando los siguientes indicadores: ${indicators.join(', ')}. Proporciona un análisis para estas temporalidades: ${timeframes.map(tf => timeframeDetails[tf]?.title || tf).join(', ')}.`;
+
+                const requestPayload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestPayload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.error("Error en la API de Gemini:", errorBody);
+                    throw new Error(`Error en la API de Gemini: ${response.status} ${response.statusText}.`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    throw new Error("No se recibió una respuesta válida de la IA.");
+                }
+
+                // Procesar la respuesta
+                const recommendationMatch = text.match(/RECOMENDACIÓN:\s*(COMPRAR|VENDER|MANTENER)/i);
+                const overallRecommendation = recommendationMatch ? recommendationMatch[1].toUpperCase() : 'MANTENER';
+                
+                const analysisMatch = text.match(/ANÁLISIS:([\s\S]*)/i);
+                let detailsHtml = 'No se pudo extraer el análisis detallado.';
+                if (analysisMatch && analysisMatch[1]) {
+                    detailsHtml = analysisMatch[1].trim()
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300 block mt-3 mb-1">$1</strong>')
+                        .replace(/\n/g, '<br>');
+                }
+
+                let recommendationClass = 'bg-orange-600 text-orange-100'; // Naranja para MANTENER
+                if (overallRecommendation === 'COMPRAR') recommendationClass = 'bg-green-700 text-green-100'; // Verde para COMPRAR
+                if (overallRecommendation === 'VENDER') recommendationClass = 'bg-red-700 text-red-100'; // Rojo para VENDER
+
+                recommendationBox.textContent = overallRecommendation;
+                recommendationBox.className = `flex items-center justify-center min-h-[100px] text-3xl font-bold rounded-xl transition-all duration-500 cursor-pointer ${recommendationClass}`;
+                recommendationText.innerHTML = detailsHtml;
+                recommendationWrapper.classList.remove('expanded'); // Reset view
+                statusMessage.textContent = 'Análisis avanzado de IA completado.';
+                statusMessage.className = 'text-purple-400 text-center mt-4 text-sm';
+            }
+
+            function setLoading(isLoading, type) {
+                const btn = type === 'gemini' ? geminiButton : sendButton;
+                const btnText = type === 'gemini' ? geminiButtonText : buttonText;
+                const spinner = type === 'gemini' ? geminiLoadingSpinner : loadingSpinner;
+                
+                if (isLoading) {
+                    btnText.classList.add('hidden');
+                    spinner.classList.remove('hidden');
+                    btn.disabled = true;
+                    btn.classList.add('cursor-not-allowed', 'opacity-75');
+                    if (type === 'webhook') geminiButton.disabled = true;
+                    statusMessage.textContent = '';
+                } else {
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.classList.remove('cursor-not-allowed', 'opacity-75');
+                }
+            }
+
+            function handleError(error, source = 'webhook') {
+                const message = `Error durante ${source === 'gemini' ? 'el análisis de IA' : 'el envío de datos'}: ${error.message}`;
+                statusMessage.textContent = message;
+                statusMessage.className = 'text-red-400 text-center mt-4 text-sm';
+                
+                if (source === 'webhook') {
+                    dataReceivedContainer.classList.add('items-center', 'justify-center');
+                    dataReceivedDiv.innerHTML = `<p class="text-red-400 text-center font-mono p-4">Error al conectar con el webhook.</p>`;
+                }
+
+                recommendationBox.textContent = 'ERROR';
+                recommendationBox.className = 'flex items-center justify-center min-h-[100px] text-3xl font-bold rounded-xl bg-red-800 text-red-100 transition-all duration-500';
+                recommendationText.textContent = '';
+                recommendationWrapper.classList.remove('expanded');
+            }
+        });
+    </script>
+</body>
+</html>
+
