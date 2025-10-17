@@ -63,10 +63,11 @@
         }
 
         .expanded .card-details {
-            max-height: 140px; /* Aumentado para más contenido */
+            max-height: 500px; /* Aumentado drásticamente para mostrar todo el fundamento */
             margin-top: 1rem;
             padding-top: 1rem;
             border-top-width: 1px;
+            overflow-y: auto; /* Añadir scroll si el contenido es muy largo */
         }
 
         /* Estilos para la sección desplegable de la recomendación */
@@ -244,7 +245,7 @@
                 const username = usernameInput.value.trim();
                 const password = passwordInput.value.trim();
 
-                if (username === 'reneli' && password === '123456cra') {
+                if (username === 'reneli' && password === '2523') {
                     loginScreen.style.display = 'none';
                     appContent.classList.remove('hidden');
                 } else {
@@ -284,22 +285,22 @@
 
             const timeframes = [
                 { id: '1m', name: '1 Min' },
-                { id: '5m', name: '5 Min' },
                 { id: '15m', name: '15 Min' },
-                { id: '1h', name: '1 Hora' },
-                { id: '4h', name: '4 Horas' },
                 { id: '1d', name: '1 Día' },
                 { id: '1mo', name: '1 Mes' }
             ];
 
             const timeframeDetails = {
                 '1m': { title: '1 Minuto', description: 'Scalping y alta frecuencia', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`, iconBg: 'bg-teal-900/50', iconColor: 'text-teal-400' },
-                '5m': { title: '5 Minutos', description: 'Micro-tendencias', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`, iconBg: 'bg-cyan-900/50', iconColor: 'text-cyan-400' },
                 '15m': { title: '15 Minutos', description: 'Tendencias a corto plazo', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`, iconBg: 'bg-blue-900/50', iconColor: 'text-blue-400' },
-                '1h': { title: '1 Hora', description: 'Análisis intradiario', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10" /><path d="M5 4h14" /><path d="M17 4v5l-4.1 4.1c-.6.6-1.5.6-2.1 0L7 9V4" /><path d="M17 14.1l-4.1-4.1c-.6-.6-1.5-.6-2.1 0L7 14.1V20h10v-5.9" /></svg>`, iconBg: 'bg-green-900/50', iconColor: 'text-green-400' },
-                '4h': { title: '4 Horas', description: 'Swing trading', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M5 5l14 14"/></svg>`, iconBg: 'bg-yellow-900/50', iconColor: 'text-yellow-400' },
                 '1d': { title: '1 Día', description: 'Tendencia diaria', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`, iconBg: 'bg-orange-900/50', iconColor: 'text-orange-400' },
                 '1mo': { title: '1 Mes', description: 'Tendencias a largo plazo', icon: `<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 4v16M5 12h14"/></svg>`, iconBg: 'bg-purple-900/50', iconColor: 'text-purple-400' }
+            };
+
+            const translations = {
+                'buy': 'COMPRAR',
+                'sell': 'VENDER',
+                'hold': 'MANTENER'
             };
 
             // --- ELEMENTOS DEL DOM ---
@@ -380,16 +381,29 @@
                     timeframes: selectedTimeframes,
                     timestamp: new Date().toISOString()
                 };
-                lastPayload = payload; // Guardar para Gemini
-
+                
                 try {
-                    // Simulación de llamada a webhook, en un caso real aquí iría el fetch
-                    await new Promise(resolve => setTimeout(resolve, 500)); 
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error en el Webhook: ${response.status} ${response.statusText}`);
+                    }
                     
-                    statusMessage.textContent = 'Datos simulados recibidos. ¡Listo para el análisis avanzado!';
+                    const result = await response.json();
+                    
+                    // Guardar el payload original para el análisis de Gemini
+                    lastPayload = payload;
+
+                    statusMessage.textContent = 'Datos recibidos del webhook. ¡Listo para el análisis avanzado!';
                     statusMessage.className = 'text-green-400 text-center mt-4 text-sm';
 
-                    displayDataCards(payload);
+                    // Usar los datos reales del webhook para mostrar las tarjetas
+                    displayDataCards(result, payload.timeframes);
+                    
                     recommendationBox.textContent = 'LISTO PARA IA';
                     recommendationBox.className = 'flex items-center justify-center min-h-[100px] text-3xl font-bold rounded-xl bg-gray-700 text-gray-400 transition-all duration-500';
                     recommendationText.innerHTML = 'Haz clic en el botón de análisis avanzado para obtener una recomendación de IA.';
@@ -426,47 +440,82 @@
                 }
             });
             
-            function displayDataCards(payload) {
+            function displayDataCards(dataFromWebhook, requestedTimeframes) {
                 dataReceivedDiv.innerHTML = ''; 
                 dataReceivedContainer.classList.remove('items-center', 'justify-center');
-                const cardActions = ['buy', 'sell', 'wait'];
 
-                payload.timeframes.forEach(tf => {
+                const analysisData = dataFromWebhook[0]?.output;
+
+                if (!analysisData) {
+                    console.error("La respuesta del webhook no tiene el formato esperado.", dataFromWebhook);
+                    dataReceivedDiv.innerHTML = `<p class="text-red-400 md:col-span-2 text-center">Error: La respuesta del webhook no tiene el formato esperado.</p>`;
+                    return;
+                }
+
+                const shortTermData = analysisData['Short-term'];
+                const longTermData = analysisData['Long-term'];
+
+
+                requestedTimeframes.forEach(tf => {
                     const details = timeframeDetails[tf];
-                    if (details) {
+                    let cardData;
+
+                    if (tf === '1m' || tf === '15m') {
+                        cardData = shortTermData;
+                    } else if (tf === '1d' || tf === '1mo') {
+                        cardData = longTermData;
+                    }
+                    
+                    if (details && cardData) {
                         const card = document.createElement('div');
                         card.className = 'bg-gray-700/50 backdrop-blur-sm border border-gray-700 p-4 rounded-xl transform hover:scale-105 transition-all duration-300 cursor-pointer';
-                        const cardAction = cardActions[Math.floor(Math.random() * cardActions.length)];
                         
-                        if (cardAction === 'buy') card.classList.add('animate-border-green');
-                        else if (cardAction === 'sell') card.classList.add('animate-border-red');
-                        else card.classList.add('animate-border-neutral');
+                        const cardAction = cardData.Action.toLowerCase();
+                        const translatedAction = translations[cardAction] || cardData.Action.toUpperCase();
+                        let actionColorClass = 'text-gray-300';
                         
-                        const entryPrice = parseFloat((Math.random() * (70000 - 60000) + 60000).toFixed(2));
-                        const stopLoss = parseFloat((entryPrice * (cardAction === 'buy' ? 0.985 : 1.015)).toFixed(2));
-                        const takeProfit = parseFloat((entryPrice * (cardAction === 'buy' ? 1.03 : 0.97)).toFixed(2));
+                        if (cardAction === 'buy') {
+                             card.classList.add('animate-border-green');
+                             actionColorClass = 'text-green-400';
+                        } else if (cardAction === 'sell') {
+                             card.classList.add('animate-border-red');
+                             actionColorClass = 'text-red-400';
+                        } else { // 'hold' or any other action
+                             card.classList.add('animate-border-neutral');
+                        }
+                        
+                        const entryPrice = cardData['Entry Price'];
+                        const stopLoss = cardData['Stop Loss'];
+                        const takeProfit = cardData['Take Profit'];
+                        const rationale = cardData['Rationale'];
+                        let rationaleText = 'No hay un fundamento disponible.';
+                        if (rationale && typeof rationale === 'object') {
+                            rationaleText = Object.values(rationale).join(' ');
+                        }
                         
                         card.innerHTML = `
-                            <div class="flex items-center space-x-4">
-                                <div class="p-3 rounded-lg ${details.iconBg} ${details.iconColor} flex-shrink-0">${details.icon}</div>
-                                <div>
-                                    <h3 class="font-semibold text-white">${details.title}</h3>
-                                    <p class="text-sm text-gray-400">${details.description}</p>
+                            <div class="flex items-center justify-between space-x-4">
+                               <div class="flex items-center space-x-4">
+                                    <div class="p-3 rounded-lg ${details.iconBg} ${details.iconColor} flex-shrink-0">${details.icon}</div>
+                                    <div>
+                                        <h3 class="font-semibold text-white">${details.title}</h3>
+                                        <p class="text-sm text-gray-400">${details.description}</p>
+                                    </div>
                                 </div>
+                                <div class="text-lg font-bold ${actionColorClass}">${translatedAction}</div>
                             </div>
                             <div class="card-details border-gray-600">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class="text-cyan-400 font-semibold">Precio de Entrada</span>
-                                    <span class="font-mono text-white font-bold">$${entryPrice.toLocaleString('en-US')}</span>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-2">
+                                     <span class="text-cyan-400 font-semibold">Precio de Entrada:</span>
+                                     <span class="font-mono text-white font-bold text-right">$${entryPrice}</span>
+
+                                     <span class="text-green-400 font-semibold">Take Profit:</span>
+                                     <span class="font-mono text-white text-right">$${takeProfit}</span>
+
+                                     <span class="text-red-400 font-semibold">Stop Loss:</span>
+                                     <span class="font-mono text-white text-right">$${stopLoss}</span>
                                 </div>
-                                <div class="flex justify-between items-center text-sm mt-2">
-                                    <span class="text-green-400 font-semibold">Take Profit</span>
-                                    <span class="font-mono text-white">$${takeProfit.toLocaleString('en-US')}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-sm mt-2">
-                                    <span class="text-red-400 font-semibold">Stop Loss</span>
-                                    <span class="font-mono text-white">$${stopLoss.toLocaleString('en-US')}</span>
-                                </div>
+                                <p class="text-xs text-gray-300 mt-2 pt-2 border-t border-gray-600">${rationaleText}</p>
                             </div>
                         `;
                         card.addEventListener('click', () => card.classList.toggle('expanded'));
@@ -480,14 +529,20 @@
                 const apiKey = ""; // Será proveída por el entorno de ejecución
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-                const systemPrompt = `Actúa como un analista experto en trading de criptomonedas. Tu análisis debe ser claro, conciso, y basado en datos actuales. Proporciona una recomendación general (COMPRAR, VENDER o MANTENER) y luego un análisis detallado para cada temporalidad solicitada, explicando el porqué de cada acción. Basa tu análisis en los indicadores proporcionados y en noticias recientes o sentimiento del mercado. Formatea tu respuesta exactamente así:
+                const systemPrompt = `Actúa como un analista experto en trading de criptomonedas. Tu análisis debe ser claro, conciso, y basado en datos actuales. Proporciona una recomendación general (COMPRAR, VENDER o MANTENER). Después, proporciona un análisis detallado para CADA temporalidad solicitada, explicando el porqué de cada acción.
 
-RECOMENDACIÓN: [TU RECOMENDACIÓN]
+Formatea tu respuesta exactamente así, sin desviaciones:
+
+RECOMENDACIÓN: [TU RECOMENDACIÓN GENERAL]
 
 ANÁLISIS:
-**Análisis para [Temporalidad 1]:** [Tu análisis detallado para esta temporalidad]
-**Análisis para [Temporalidad 2]:** [Tu análisis detallado para esta temporalidad]
-...y así sucesivamente.`;
+**Análisis para [Temporalidad 1]:**
+[Tu análisis detallado para la primera temporalidad. Explica cómo los indicadores (RSI, MACD, Bandas de Bollinger, etc.) influyen en la decisión para este marco de tiempo específico.]
+
+**Análisis para [Temporalidad 2]:**
+[Tu análisis detallado para la segunda temporalidad. Explica cómo los indicadores (RSI, MACD, Bandas de Bollinger, etc.) influyen en la decisión para este marco de tiempo específico.]
+
+...y así sucesivamente para todas las temporalidades solicitadas.`;
 
                 const userQuery = `Analiza la criptomoneda ${symbol} usando los siguientes indicadores: ${indicators.join(', ')}. Proporciona un análisis para estas temporalidades: ${timeframes.map(tf => timeframeDetails[tf]?.title || tf).join(', ')}.`;
 
