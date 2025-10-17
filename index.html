@@ -526,7 +526,9 @@
 
             async function generateGeminiRecommendation(payload) {
                 const { symbol, indicators, timeframes } = payload;
-                const apiKey = ""; // Será proveída por el entorno de ejecución
+                // IMPORTANTE: Debes reemplazar "TU_API_KEY_DE_GEMINI_AQUI" con tu propia API Key de Google AI Studio.
+                // El error 403 que recibes en GitHub se debe a que se necesita una clave válida para hacer peticiones desde un sitio público.
+                const apiKey = "AIzaSyDOYVDGV6tdQ0GUZKFfd_JRTeOcnkBBSTU"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
                 const systemPrompt = `Actúa como un analista experto en trading de criptomonedas. Tu análisis debe ser claro, conciso, y basado en datos actuales. Proporciona una recomendación general (COMPRAR, VENDER o MANTENER). Después, proporciona un análisis detallado para CADA temporalidad solicitada, explicando el porqué de cada acción.
